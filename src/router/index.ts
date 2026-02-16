@@ -9,6 +9,11 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
+    {
+      path: '/timer',
+      name: 'timer',
+      component: () => import('@/views/TimerView.vue'),
+    },
   ],
 })
 
