@@ -1,13 +1,24 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
 import { presets, type PomodoroPreset } from '@/types/pomodoro'
+import alarmSrc from '@/assets/audio/alarm.mp3'
 
-type Phase = 'select' | 'study' | 'study-done' | 'break' | 'break-done'
+type Phase =
+  | 'select'
+  | 'study-ready'
+  | 'study'
+  | 'study-done'
+  | 'break-ready'
+  | 'break'
+  | 'break-done'
 
 const phase = ref<Phase>('select')
 const activePreset = ref<PomodoroPreset | null>(null)
 const totalSeconds = ref(0)
 let intervalId: number | null = null
+
+const alarm = new Audio(alarmSrc)
+alarm.loop = true
 
 const display = computed(() => {
   const mins = Math.floor(totalSeconds.value / 60)
@@ -16,56 +27,103 @@ const display = computed(() => {
 })
 
 const phaseLabel = computed(() => {
-  if (phase.value === 'study') return 'Study Time'
-  if (phase.value === 'break') return 'Break Time'
-  return ''
+  switch (phase.value) {
+    case 'study-ready':
+    case 'study':
+      return 'Study Time'
+    case 'study-done':
+      return 'Study Complete!'
+    case 'break-ready':
+    case 'break':
+      return 'Break Time'
+    case 'break-done':
+      return 'Break Over!'
+    default:
+      return ''
+  }
 })
+
+const isCountingDown = computed(() => phase.value === 'study' || phase.value === 'break')
+const isAlarming = computed(() => phase.value === 'study-done' || phase.value === 'break-done')
+const isReady = computed(() => phase.value === 'study-ready' || phase.value === 'break-ready')
 
 function selectPreset(preset: PomodoroPreset) {
   activePreset.value = preset
   totalSeconds.value = preset.studyMinutes * 60
-  phase.value = 'study'
-  startCountdown()
+  phase.value = 'study-ready'
 }
 
-function startCountdown() {
-  clearTimer()
+function startTimer() {
+  clearInterval_(intervalId)
   intervalId = window.setInterval(() => {
     if (totalSeconds.value > 0) {
       totalSeconds.value--
     } else {
-      clearTimer()
+      clearInterval_(intervalId)
+      intervalId = null
       if (phase.value === 'study') {
         phase.value = 'study-done'
       } else if (phase.value === 'break') {
         phase.value = 'break-done'
       }
+      alarm.currentTime = 0
+      alarm.play()
     }
   }, 1000)
+
+  if (phase.value === 'study-ready') {
+    phase.value = 'study'
+  } else if (phase.value === 'break-ready') {
+    phase.value = 'break'
+  }
 }
 
-function startBreak() {
-  if (!activePreset.value) return
-  totalSeconds.value = activePreset.value.breakMinutes * 60
-  phase.value = 'break'
-  startCountdown()
+function stopTimer() {
+  alarm.pause()
+  alarm.currentTime = 0
+
+  if (isAlarming.value) {
+    // Alarm was playing — transition to next phase
+    if (phase.value === 'study-done' && activePreset.value) {
+      totalSeconds.value = activePreset.value.breakMinutes * 60
+      phase.value = 'break-ready'
+    } else if (activePreset.value) {
+      // break-done — loop back to study
+      totalSeconds.value = activePreset.value.studyMinutes * 60
+      phase.value = 'study-ready'
+    }
+  } else if (isCountingDown.value) {
+    // User stopped a running timer — transition forward
+    clearInterval_(intervalId)
+    intervalId = null
+    if (phase.value === 'study' && activePreset.value) {
+      totalSeconds.value = activePreset.value.breakMinutes * 60
+      phase.value = 'break-ready'
+    } else if (activePreset.value) {
+      totalSeconds.value = activePreset.value.studyMinutes * 60
+      phase.value = 'study-ready'
+    }
+  }
 }
 
-function backToSelect() {
-  clearTimer()
+function cancel() {
+  clearInterval_(intervalId)
+  intervalId = null
+  alarm.pause()
+  alarm.currentTime = 0
   phase.value = 'select'
   activePreset.value = null
   totalSeconds.value = 0
 }
 
-function clearTimer() {
-  if (intervalId !== null) {
-    clearInterval(intervalId)
-    intervalId = null
-  }
+function clearInterval_(id: number | null) {
+  if (id !== null) clearInterval(id)
 }
 
-onUnmounted(clearTimer)
+onUnmounted(() => {
+  clearInterval_(intervalId)
+  alarm.pause()
+})
 </script>
 
 <template>
@@ -87,22 +145,14 @@ onUnmounted(clearTimer)
       </div>
     </template>
 
-    <!-- Active countdown (study or break) -->
-    <template v-if="phase === 'study' || phase === 'break'">
+    <!-- Timer display (all phases except select) -->
+    <template v-if="phase !== 'select'">
       <div class="phase-label pink-text">{{ phaseLabel }}</div>
       <div class="display pink-text">{{ display }}</div>
-    </template>
 
-    <!-- Study finished — waiting for user to start break -->
-    <template v-if="phase === 'study-done'">
-      <div class="phase-label pink-text">Study Complete!</div>
-      <button class="btn pink-highlight" @click="startBreak">Start Break</button>
-    </template>
-
-    <!-- Break finished -->
-    <template v-if="phase === 'break-done'">
-      <div class="phase-label pink-text">Break Over!</div>
-      <button class="btn pink-element" @click="backToSelect">Done</button>
+      <button v-if="isReady" class="btn pink-element" @click="startTimer">Start</button>
+      <button v-if="isCountingDown || isAlarming" class="btn pink-highlight" @click="stopTimer">Stop</button>
+      <button class="btn-cancel pink-text" @click="cancel">cancel</button>
     </template>
   </div>
 </template>
@@ -162,6 +212,20 @@ onUnmounted(clearTimer)
 
   &:hover {
     filter: brightness(0.9);
+  }
+}
+
+.btn-cancel {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
   }
 }
 </style>
