@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
 import { presets, type PomodoroPreset } from '@/types/pomodoro'
+import { saveCompletion } from '@/types/stats'
 import alarmSrc from '@/assets/audio/alarm.mp3'
 
 type Phase =
@@ -62,6 +63,7 @@ function startTimer() {
       clearInterval_(intervalId)
       intervalId = null
       if (phase.value === 'study') {
+        saveCompletion(activePreset.value!.studyMinutes)
         phase.value = 'study-done'
       } else if (phase.value === 'break') {
         phase.value = 'break-done'

@@ -6,7 +6,9 @@
       "Bash(npx create-vue@latest --typescript --router --force --bare .)",
       "Bash(npm install:*)",
       "Bash(npx vue-tsc:*)",
-      "Bash(timeout 8 npx vite:*)"
+      "Bash(timeout 8 npx vite:*)",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npx vite build)"
     ]
   }
 }
