@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npx create-vue:*)",
+      "Bash(npx create-vue@latest --typescript --router --force --bare .)",
+      "Bash(npm install:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(timeout 8 npx vite:*)"
+    ]
+  }
+}
