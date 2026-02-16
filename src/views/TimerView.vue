@@ -3,6 +3,9 @@ import { ref, computed, onUnmounted } from 'vue'
 import { presets, type PomodoroPreset } from '@/types/pomodoro'
 import { saveCompletion } from '@/types/stats'
 import alarmSrc from '@/assets/audio/alarm.mp3'
+import badge1 from '@/assets/img/badge1.gif'
+import badge2 from '@/assets/img/badge2.gif'
+import badge3 from '@/assets/img/badge3.gif'
 
 type Phase =
   | 'select'
@@ -130,6 +133,12 @@ onUnmounted(() => {
 
 <template>
   <div class="timer pink-bg">
+    <template v-if="phase === 'study'">
+      <img :src="badge1" class="corner-gif top-left" alt="" />
+      <img :src="badge2" class="corner-gif top-right" alt="" />
+      <img :src="badge3" class="corner-gif bottom-right" alt="" />
+    </template>
+
     <h1 class="title pink-text">sabibi timer</h1>
 
     <!-- Preset selection -->
@@ -168,6 +177,30 @@ onUnmounted(() => {
   min-height: 100vh;
   gap: 1.5rem;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.corner-gif {
+  position: absolute;
+  width: 80px;
+  pointer-events: none;
+  opacity: 0.85;
+
+  &.top-left {
+    top: 12px;
+    left: 12px;
+  }
+
+  &.top-right {
+    top: 12px;
+    right: 12px;
+  }
+
+  &.bottom-right {
+    bottom: 12px;
+    right: 12px;
+  }
 }
 
 .title {
