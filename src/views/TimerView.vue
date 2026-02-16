@@ -159,7 +159,7 @@ onUnmounted(() => {
     <!-- Timer display (all phases except select) -->
     <template v-if="phase !== 'select'">
       <div class="phase-label pink-text">{{ phaseLabel }}</div>
-      <div class="display pink-text">{{ display }}</div>
+      <div class="display pink-text" :class="{ 'display--active': isCountingDown }">{{ display }}</div>
 
       <button v-if="isReady" class="btn pink-element" @click="startTimer">Start</button>
       <button v-if="isCountingDown || isAlarming" class="btn pink-highlight" @click="stopTimer">Stop</button>
@@ -185,22 +185,46 @@ onUnmounted(() => {
   position: absolute;
   width: 80px;
   pointer-events: none;
-  opacity: 0.85;
+  animation: fade-in 0.6s ease-out both;
 
   &.top-left {
     top: 12px;
     left: 12px;
+    animation: fade-in 0.6s ease-out both, float-y 3s ease-in-out 0.6s infinite;
   }
 
   &.top-right {
     top: 12px;
     right: 12px;
+    animation: fade-in 0.6s ease-out 0.15s both, float-x 3.5s ease-in-out 0.75s infinite;
   }
 
   &.bottom-right {
     bottom: 12px;
     right: 12px;
+    animation: fade-in 0.6s ease-out 0.3s both, float-y 4s ease-in-out 0.9s infinite;
   }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+  to {
+    opacity: 0.85;
+    scale: 1;
+  }
+}
+
+@keyframes float-y {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+@keyframes float-x {
+  0%, 100% { translate: 0 0; }
+  50% { translate: -6px -4px; }
 }
 
 .title {
@@ -221,6 +245,15 @@ onUnmounted(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
+
+  &--active {
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .presets {
