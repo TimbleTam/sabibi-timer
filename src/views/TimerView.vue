@@ -212,6 +212,7 @@ onUnmounted(() => {
           <span class="preset-detail">{{ preset.studyMinutes }}/{{ preset.breakMinutes }}</span>
         </button>
       </div>
+      <router-link to="/stats" class="btn-cancel pink-text">view stats</router-link>
     </template>
 
     <!-- Timer display (all phases except select) -->

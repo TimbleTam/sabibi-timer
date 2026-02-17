@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Pacifico';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/Pacifico-Regular.woff2') format('woff2');
+}
+
 :root {
   --pink-text: #d1618f;
   --pink-bg: #fce4ec;

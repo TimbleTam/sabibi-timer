@@ -1,0 +1,45 @@
+name: Build macOS Desktop App
+
+on:
+  push:
+    branches: ['desktop-version']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        run: npm run tauri:build
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: sabibi-timer-macos-dmg
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
+      - name: Upload App
+        uses: actions/upload-artifact@v4
+        with:
+          name: sabibi-timer-macos-app
+          path: src-tauri/target/release/bundle/macos/*.app
